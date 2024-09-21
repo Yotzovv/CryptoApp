@@ -18,10 +18,10 @@ namespace CryptoApp.Data.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Coin = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Amount = table.Column<double>(type: "float", nullable: false),
-                    InitialBuyPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    CurrentPrice = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    InitialValue = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
-                    CurrentValue = table.Column<decimal>(type: "decimal(18,2)", nullable: false),
+                    InitialBuyPrice = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
+                    CurrentPrice = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
+                    InitialValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
+                    CurrentValue = table.Column<decimal>(type: "decimal(18,6)", precision: 18, scale: 6, nullable: false),
                     ChangePercentage = table.Column<double>(type: "float", nullable: false)
                 },
                 constraints: table =>

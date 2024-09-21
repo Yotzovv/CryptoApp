@@ -26,6 +26,11 @@ public class CryptoAppDbContext : IdentityDbContext<AspNetUser, IdentityRole<Gui
             base.OnModelCreating(builder);
             
             builder.Entity<Currency>().HasKey(x => x.Id);
+
+            builder.Entity<Currency>().Property(x => x.CurrentPrice).HasPrecision(18, 6);
+            builder.Entity<Currency>().Property(x => x.CurrentValue).HasPrecision(18, 6);
+            builder.Entity<Currency>().Property(x => x.InitialBuyPrice).HasPrecision(18, 6);
+            builder.Entity<Currency>().Property(x => x.InitialValue).HasPrecision(18, 6);
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder builder)

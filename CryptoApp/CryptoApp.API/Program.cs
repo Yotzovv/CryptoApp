@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using CryptoApp.API.Common;
 using CryptoApp.Data;
 using CryptoApp.Data.Models;
@@ -22,10 +23,44 @@ public class Program
         {
             c.SwaggerDoc("v1", new OpenApiInfo { Title = "CryptoApp.API", Version = "v1" });
             c.OperationFilter<FileUploadOperation>();
+
+            // Add JWT Authentication
+            c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+            {
+                In = ParameterLocation.Header,
+                Description = "Please enter JWT with Bearer into field. Example: \"Bearer {token}\"",
+                Name = "Authorization",
+                Type = SecuritySchemeType.ApiKey,
+                Scheme = "Bearer"
+            });
+
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            {
+                {
+                    new OpenApiSecurityScheme
+                    {
+                        Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+                    },
+                    Array.Empty<string>()
+                }
+            });
         });
         
+        string GetOsDbPath()
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                return "Server=.\\SQLEXPRESS;Database=CryptoAppDB;Trusted_Connection=True;MultipleActiveResultSets=true;";
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                return @"Server=localhost,1433;Database=CryptoAppDB;User Id=sa;Password=reallyStrongPwd123;TrustServerCertificate=true";
+
+            throw new Exception("Unsupported OS");
+        }
+        
         builder.Services.AddDbContext<CryptoAppDbContext>(options =>
-            options.UseSqlServer(configuration.GetConnectionString("DefaultDatabaseConnection")));
+        {
+            var osPath = GetOsDbPath();
+            options.UseSqlServer(osPath);
+        }, ServiceLifetime.Scoped);
         
         builder.Services.AddIdentity<AspNetUser, IdentityRole<Guid>>()
             .AddEntityFrameworkStores<CryptoAppDbContext>()
@@ -71,7 +106,7 @@ public class Program
         {
             app.UseExceptionHandler("/Error");
             app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "CryptoApp.AIPI v1"));
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "CryptoApp.API v1"));
         }
         
         if (app.Environment.IsDevelopment())

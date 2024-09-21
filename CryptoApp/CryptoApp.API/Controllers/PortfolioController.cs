@@ -3,9 +3,9 @@ using CryptoApp.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace CryptoApp.API.Controller;
+namespace CryptoApp.API.Controllers;
 
-[Authorize]
+// [Authorize]
 [Route("api/[controller]")]
 [ApiController]
 public class PortfolioController : ControllerBase
@@ -26,7 +26,7 @@ public class PortfolioController : ControllerBase
     
     [HttpPost("upload")]
     [Consumes("multipart/form-data")]
-    public IActionResult Post([FromForm] FileUploadDto dto)
+    public async Task<IActionResult> Post([FromForm] FileUploadDto dto)
     {
         if (dto.File.Length == 0)
             return BadRequest(new { message = "Invalid file." });
@@ -36,7 +36,7 @@ public class PortfolioController : ControllerBase
         
         try
         {
-            _portfolioService.Upload(dto.File);
+            await _portfolioService.Upload(dto.File);
             return Ok();
         }
         catch (Exception e)

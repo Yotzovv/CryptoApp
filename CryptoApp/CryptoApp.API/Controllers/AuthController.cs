@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
-namespace CryptoApp.API.Controller;
+namespace CryptoApp.API.Controllers;
 
 public class AuthController : ControllerBase
 {

@@ -1,0 +1,52 @@
+# Build Folders
+bin/
+obj/
+
+# Rider Project Files
+.idea/
+*.sln.iml
+
+# Visual Studio Files
+.vs/
+*.suo
+*.user
+*.userprefs
+
+# MacOS Files
+.DS_Store
+
+# Windows Files
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+
+# Temporary Files
+*.tmp
+*.temp
+*.pid
+
+# Resharper Files
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# NuGet Packages
+packages/
+*.nupkg
+
+# Test Results
+TestResults/
+*.trx
+*.coverage
+*.coveragexml
+
+# Publish Profiles
+PublishProfiles/
+
+# Configuration Files
+appsettings.Development.json
+appsettings.Local.json
+
+# IDE Settings
+*.sln.DotSettings.user

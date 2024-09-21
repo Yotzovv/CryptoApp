@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoApp.API", "CryptoApp.API\CryptoApp.API.csproj", "{5433FC54-0DBB-4481-9EC3-D0DAFFFB1F7D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoApp.Data", "CryptoApp.Data\CryptoApp.Data.csproj", "{02AAC443-97D2-4221-B143-71159A981454}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CryptoApp.Services", "CryptoApp.Services\CryptoApp.Services.csproj", "{24B73FFE-83F8-4144-AD4E-FFF3575A2042}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5433FC54-0DBB-4481-9EC3-D0DAFFFB1F7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5433FC54-0DBB-4481-9EC3-D0DAFFFB1F7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5433FC54-0DBB-4481-9EC3-D0DAFFFB1F7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5433FC54-0DBB-4481-9EC3-D0DAFFFB1F7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{02AAC443-97D2-4221-B143-71159A981454}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{02AAC443-97D2-4221-B143-71159A981454}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{02AAC443-97D2-4221-B143-71159A981454}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{02AAC443-97D2-4221-B143-71159A981454}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24B73FFE-83F8-4144-AD4E-FFF3575A2042}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24B73FFE-83F8-4144-AD4E-FFF3575A2042}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24B73FFE-83F8-4144-AD4E-FFF3575A2042}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24B73FFE-83F8-4144-AD4E-FFF3575A2042}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

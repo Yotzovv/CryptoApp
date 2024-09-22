@@ -24,9 +24,16 @@ public class PortfolioController : ControllerBase
     
     
     [HttpGet("current")]
-    public IActionResult Get()
+    public async Task<ActionResult<PortfolioDto>> Get()
     {
-        return Ok("Hello World");
+        var userId = new Guid(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
+        
+        if(userId == Guid.Empty)
+            return BadRequest(new { message = "Invalid user." });
+
+        var portfolio = await _portfolioService.Get(userId);
+        
+        return Ok(portfolio);
     }
     
     [HttpPost("upload")]
@@ -41,11 +48,15 @@ public class PortfolioController : ControllerBase
         
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
             
-            var user = await _userManager.FindByIdAsync(userId ?? throw new InvalidOperationException());
+            if(userId == string.Empty)
+                return BadRequest(new { message = "Invalid user." });
             
-            await _portfolioService.Upload(dto.File, user);
+            var user = await _userManager.FindByIdAsync(userId);
+            
+            await _portfolioService.Upload(dto.File, user!);
+            
             return Ok();
         }
         catch (Exception e)

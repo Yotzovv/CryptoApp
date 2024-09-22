@@ -75,11 +75,15 @@ public class AuthController : ControllerBase
     {
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Email ?? throw new InvalidOperationException()),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Email!),
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtKey"] ?? throw new InvalidOperationException()));
+        if (_configuration["JwtIssuer"] == null || _configuration["JwtKey"] == null)
+            throw new Exception("JwtIssuer or JwtKey is missing from app settings."); // TODO: Is it ok to throw exception in controller?
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtKey"]!));
+        
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(

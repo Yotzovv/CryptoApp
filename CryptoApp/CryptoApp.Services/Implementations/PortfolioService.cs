@@ -1,8 +1,10 @@
 using System.Globalization;
 using CryptoApp.Data;
+using CryptoApp.Data.dtos;
 using CryptoApp.Data.Models;
 using CryptoApp.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace CryptoApp.Services.Implementations;
 
@@ -15,17 +17,34 @@ public class PortfolioService : IPortfolioService
         _context = context;
     }
 
-    public void Get()
+    public async Task<PortfolioDto> Get(Guid userId)
     {
-        throw new NotImplementedException();
+        var portfolio = await _context.Portfolios
+            .Include(x => x.Currencies)
+            .Include(x => x.User)
+            .SingleAsync(x => x.UserId == userId);
+        
+        var portfolioDto = new PortfolioDto
+        {
+            Id = portfolio.Id,
+            User = new AspNetUserDto() { Id = portfolio.User.Id, Email = portfolio.User.Email },
+            Currencies = portfolio.Currencies.Select(x => new CurrencyDto
+            {
+                Id = x.Id,
+                Amount = x.Amount,
+                Coin = x.Coin,
+                InitialBuyPrice = x.InitialBuyPrice
+            }).ToList()
+        };
+
+        return portfolioDto;
     }
 
-    public async Task Upload(IFormFile? file, AspNetUser? user)
+    public async Task Upload(IFormFile? file, AspNetUser user)
     {
         using var reader = new StreamReader(file!.OpenReadStream());
 
-        string line;
-        while ((line = await reader.ReadLineAsync()) != null)
+        while (await reader.ReadLineAsync() is { } line)
         {
             var currency = ProcessLine(line, user);
             _context.Currencies.Add(currency);

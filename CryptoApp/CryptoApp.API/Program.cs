@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using CryptoApp.API.Common;
 using CryptoApp.Data;
 using CryptoApp.Data.Models;
+using CryptoApp.Data.Repository;
 using CryptoApp.Services.Implementations;
 using CryptoApp.Services.Interfaces;
 using Microsoft.AspNetCore.Identity;
@@ -99,6 +100,7 @@ public class Program
         });
         
         builder.Services.AddScoped<IPortfolioService, PortfolioService>();
+        builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
         var app = builder.Build();
         

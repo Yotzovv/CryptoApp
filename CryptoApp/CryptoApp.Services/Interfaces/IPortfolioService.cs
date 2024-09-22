@@ -8,5 +8,5 @@ public interface IPortfolioService
 {
     Task Upload(IFormFile? file, AspNetUser user);
     
-    Task<PortfolioDto> Get(Guid userId);
+    Task<PortfolioDto> Get(Guid id);
 }

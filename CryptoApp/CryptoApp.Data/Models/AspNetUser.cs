@@ -10,7 +10,9 @@ namespace CryptoApp.Data.Models
         public string? FirstName { get; set; }
 
         public string? LastName { get; set; }
+
+        public bool IsActive { get; set; } = true;
         
-        public bool IsActive { get; set; }
+        public Portfolio Portfolio { get; set; }
     }
 }

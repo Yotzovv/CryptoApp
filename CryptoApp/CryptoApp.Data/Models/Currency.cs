@@ -9,5 +9,10 @@ public class Currency
     public decimal CurrentPrice { get; set; }
     public decimal InitialValue { get; set; }
     public decimal CurrentValue { get; set; }
+    
     public double ChangePercentage { get; set; }
+    
+    public Guid PortfolioId { get; set; }
+    
+    public required Portfolio Portfolio { get; set; }
 }

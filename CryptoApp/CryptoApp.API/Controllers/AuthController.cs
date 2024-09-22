@@ -27,15 +27,15 @@ public class AuthController : ControllerBase
     {
         var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
 
-        if (result.Succeeded)
-        {
-            var user = await _userManager.FindByEmailAsync(model.Email);
-            var token = GenerateJwtToken(user);
+        if (!result.Succeeded) 
+            return Unauthorized(new { message = "Invalid login attempt." });
+        
+        var user = await _userManager.FindByEmailAsync(model.Email);
+        
+        var token = GenerateJwtToken(user!);
 
-            return Ok(new { token });
-        }
+        return Ok(new { token });
 
-        return Unauthorized(new { message = "Invalid login attempt." });
     }
     
     [HttpPost("register")]
@@ -45,30 +45,41 @@ public class AuthController : ControllerBase
         {
             UserName = model.Email,
             Email = model.Email,
-            IsActive = true
+            IsActive = true,
+        };
+
+        user.Portfolio = new Portfolio()
+        {
+            User = user,
         };
         
-        user.PasswordHash = _userManager.PasswordHasher.HashPassword(user, model.Password);
-        
-        var result = await _userManager.CreateAsync(user, model.Password);
-
-        if (result.Succeeded)
+        try
         {
-            return Ok(new { message = "Registration successful." });
+            var result = await _userManager.CreateAsync(user, model.Password);
+            
+            if (result.Succeeded)
+            {
+                return Ok(new { message = "Registration successful." });
+            }
         }
-
-        return BadRequest(new { errors = result.Errors });
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+            throw;
+        }
+        
+        return BadRequest();
     }
     
     private string GenerateJwtToken(AspNetUser user)
     {
         var claims = new[]
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Email),
+            new Claim(JwtRegisteredClaimNames.Sub, user.Email ?? throw new InvalidOperationException()),
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
         };
 
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtKey"]));
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtKey"] ?? throw new InvalidOperationException()));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var token = new JwtSecurityToken(

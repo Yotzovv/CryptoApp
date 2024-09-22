@@ -20,17 +20,58 @@ public class CryptoAppDbContext : IdentityDbContext<AspNetUser, IdentityRole<Gui
         public virtual DbSet<AspNetUser> AspNetUsers { get; set; }
         public virtual DbSet<Currency> Currencies { get; set; }
         
+        public virtual DbSet<Portfolio> Portfolios { get; set; }
        
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-            
-            builder.Entity<Currency>().HasKey(x => x.Id);
 
-            builder.Entity<Currency>().Property(x => x.CurrentPrice).HasPrecision(18, 6);
-            builder.Entity<Currency>().Property(x => x.CurrentValue).HasPrecision(18, 6);
-            builder.Entity<Currency>().Property(x => x.InitialBuyPrice).HasPrecision(18, 6);
-            builder.Entity<Currency>().Property(x => x.InitialValue).HasPrecision(18, 6);
+            builder.Entity<AspNetUser>(user =>
+            {
+                user.HasKey(x => x.Id);
+                user.Property(x => x.FirstName).HasMaxLength(50);
+                user.Property(x => x.LastName).HasMaxLength(50);
+                user.Property(x => x.IsActive).HasDefaultValue(true);
+                
+                user.HasOne(p => p.Portfolio)
+                    .WithOne(u => u.User)
+                    .HasForeignKey<Portfolio>(p => p.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);                    
+            });
+
+
+            builder.Entity<Portfolio>(portfolio =>
+            {
+                portfolio.HasKey(x => x.Id);
+                
+                portfolio.HasOne(x => x.User)
+                    .WithOne(x => x.Portfolio)
+                    .HasForeignKey<Portfolio>(x => x.UserId)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                portfolio.HasMany(x => x.Currencies)
+                    .WithOne(x => x.Portfolio)
+                    .HasForeignKey(x => x.PortfolioId);
+                
+                portfolio.Property(x => x.InitialPortfolioValue).HasPrecision(18, 6);
+                portfolio.Property(x => x.CurrentPortfolioValue).HasPrecision(18, 6);
+                portfolio.Property(x => x.InitialPortfolioValue).HasPrecision(18, 6);
+            });
+            
+            
+            builder.Entity<Currency>(currency =>
+            {
+                currency.HasKey(x => x.Id);
+                currency.Property(x => x.CurrentPrice).HasPrecision(18, 6);
+                currency.Property(x => x.CurrentValue).HasPrecision(18, 6);
+                currency.Property(x => x.InitialBuyPrice).HasPrecision(18, 6);
+                currency.Property(x => x.InitialValue).HasPrecision(18, 6);
+
+               // currency.HasOne(x => x.Portfolio)
+               //     .WithMany(c => c.Currencies)
+               //     .HasForeignKey(x => x.PortfolioId)
+               //     .OnDelete(DeleteBehavior.Cascade);
+            });
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder builder)

@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CryptoApp.Data.Migrations
 {
     [DbContext(typeof(CryptoAppDbContext))]
-    [Migration("20240921170304_AddPortfolio")]
+    [Migration("20240922075911_AddPortfolio")]
     partial class AddPortfolio
     {
         /// <inheritdoc />
@@ -46,13 +46,17 @@ namespace CryptoApp.Data.Migrations
                         .HasColumnType("bit");
 
                     b.Property<string>("FirstName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("LastName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("LockoutEnabled")
                         .HasColumnType("bit");
@@ -132,9 +136,42 @@ namespace CryptoApp.Data.Migrations
                         .HasPrecision(18, 6)
                         .HasColumnType("decimal(18,6)");
 
+                    b.Property<Guid>("PortfolioId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("PortfolioId");
+
                     b.ToTable("Currencies");
+                });
+
+            modelBuilder.Entity("CryptoApp.Data.Models.Portfolio", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<double>("CurrentPortfolioValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("float(18)");
+
+                    b.Property<double>("InitialPortfolioValue")
+                        .HasPrecision(18, 6)
+                        .HasColumnType("float(18)");
+
+                    b.Property<double>("OverallChangePercentage")
+                        .HasColumnType("float");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Portfolios");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", b =>
@@ -268,6 +305,28 @@ namespace CryptoApp.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("CryptoApp.Data.Models.Currency", b =>
+                {
+                    b.HasOne("CryptoApp.Data.Models.Portfolio", "Portfolio")
+                        .WithMany("Currencies")
+                        .HasForeignKey("PortfolioId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Portfolio");
+                });
+
+            modelBuilder.Entity("CryptoApp.Data.Models.Portfolio", b =>
+                {
+                    b.HasOne("CryptoApp.Data.Models.AspNetUser", "User")
+                        .WithOne("Portfolio")
+                        .HasForeignKey("CryptoApp.Data.Models.Portfolio", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<System.Guid>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole<System.Guid>", null)
@@ -317,6 +376,17 @@ namespace CryptoApp.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("CryptoApp.Data.Models.AspNetUser", b =>
+                {
+                    b.Navigation("Portfolio")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CryptoApp.Data.Models.Portfolio", b =>
+                {
+                    b.Navigation("Currencies");
                 });
 #pragma warning restore 612, 618
         }

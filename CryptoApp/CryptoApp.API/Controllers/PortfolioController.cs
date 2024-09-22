@@ -1,20 +1,25 @@
+using System.Security.Claims;
 using CryptoApp.Data.dtos;
+using CryptoApp.Data.Models;
 using CryptoApp.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CryptoApp.API.Controllers;
 
-// [Authorize]
+[Authorize]
 [Route("api/[controller]")]
 [ApiController]
 public class PortfolioController : ControllerBase
 {
     private readonly IPortfolioService _portfolioService;
-    
-    public PortfolioController(IPortfolioService portfolioService)
+    private readonly UserManager<AspNetUser> _userManager;
+
+    public PortfolioController(IPortfolioService portfolioService, UserManager<AspNetUser> userManager)
     {
         _portfolioService = portfolioService;
+        _userManager = userManager;
     }
     
     
@@ -36,7 +41,11 @@ public class PortfolioController : ControllerBase
         
         try
         {
-            await _portfolioService.Upload(dto.File);
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            
+            var user = await _userManager.FindByIdAsync(userId ?? throw new InvalidOperationException());
+            
+            await _portfolioService.Upload(dto.File, user);
             return Ok();
         }
         catch (Exception e)

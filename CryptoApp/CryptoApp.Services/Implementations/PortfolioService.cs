@@ -20,39 +20,21 @@ public class PortfolioService : IPortfolioService
         throw new NotImplementedException();
     }
 
-    public async Task Upload(IFormFile? file)
+    public async Task Upload(IFormFile? file, AspNetUser? user)
     {
         using var reader = new StreamReader(file!.OpenReadStream());
 
         string line;
         while ((line = await reader.ReadLineAsync()) != null)
         {
-            try
-            {
-                var currency = ProcessLine(line);
-                _context.Currencies.Add(currency);
-            }
-            catch (Exception ex)
-            {
-                // Optionally log or handle the exception for invalid lines
-                // For now, we'll skip invalid lines
-                continue;
-            }
+            var currency = ProcessLine(line, user);
+            _context.Currencies.Add(currency);
         }
 
-        try
-        {
-            await _context.SaveChangesAsync();
-        }
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-            throw;
-        }
-        // Move SaveChangesAsync outside of the loop and avoid wrapping it in a using statement
+        await _context.SaveChangesAsync();
     }
 
-    private Currency ProcessLine(string line)
+    private Currency ProcessLine(string line, AspNetUser user)
     {
         var parts = line.Split("|");
 
@@ -66,12 +48,16 @@ public class PortfolioService : IPortfolioService
 
         if (!decimal.TryParse(parts[2], NumberStyles.Number, CultureInfo.InvariantCulture, out var initialBuyPrice))
             throw new Exception("Invalid price value.");
+        
+        var portfolio = _context.Portfolios.FirstOrDefault(x => x.UserId == user.Id);
 
         var currency = new Currency
         {
             Amount = coinsOwned,
             Coin = coinName,
-            InitialBuyPrice = initialBuyPrice
+            InitialBuyPrice = initialBuyPrice,
+            PortfolioId = portfolio!.Id,
+            Portfolio = portfolio
         };
 
         return currency;

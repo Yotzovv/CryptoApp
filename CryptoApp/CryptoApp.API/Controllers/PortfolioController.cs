@@ -26,11 +26,13 @@ public class PortfolioController : ControllerBase
     [HttpGet("current")]
     public async Task<ActionResult<PortfolioDto>> Get()
     {
-        var userId = new Guid(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty);
-        
-        if(userId == Guid.Empty)
-            return BadRequest(new { message = "Invalid user." });
+        var userId = new Guid(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
+        if(userId == null || userId == Guid.Empty)
+        {
+            return Unauthorized("No user ID claim present in token.");
+        }
+      
         var portfolio = await _portfolioService.Get(userId);
         
         return Ok(portfolio);
@@ -40,6 +42,13 @@ public class PortfolioController : ControllerBase
     [Consumes("multipart/form-data")]
     public async Task<IActionResult> Post([FromForm] FileUploadDto dto)
     {
+        var userId = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value;
+
+        if(userId == null)
+        {
+            return Unauthorized("No user ID claim present in token.");
+        }
+        
         if (dto.File.Length == 0)
             return BadRequest(new { message = "Invalid file." });
         
@@ -48,11 +57,6 @@ public class PortfolioController : ControllerBase
         
         try
         {
-            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? string.Empty;
-            
-            if(userId == string.Empty)
-                return BadRequest(new { message = "Invalid user." });
-            
             var user = await _userManager.FindByIdAsync(userId);
             
             await _portfolioService.Upload(dto.File, user!);

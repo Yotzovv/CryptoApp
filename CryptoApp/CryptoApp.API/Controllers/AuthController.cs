@@ -34,7 +34,7 @@ public class AuthController : ControllerBase
         
         var token = GenerateJwtToken(user!);
 
-        return Ok(new { token });
+        return Ok(new AuthResponse { Token = token });
 
     }
     
@@ -73,26 +73,22 @@ public class AuthController : ControllerBase
     
     private string GenerateJwtToken(AspNetUser user)
     {
-        var claims = new[]
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Key"]);
+        var tokenDescriptor = new SecurityTokenDescriptor
         {
-            new Claim(JwtRegisteredClaimNames.Sub, user.Email!),
-            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+            Subject = new ClaimsIdentity(new Claim[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                // Add more claims as needed
+            }),
+            Expires = DateTime.UtcNow.AddHours(1),
+            SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature),
+            Issuer = _configuration["Jwt:Issuer"],
+            Audience = _configuration["Jwt:Audience"] 
         };
 
-        if (_configuration["JwtIssuer"] == null || _configuration["JwtKey"] == null)
-            throw new Exception("JwtIssuer or JwtKey is missing from app settings."); // TODO: Is it ok to throw exception in controller?
-
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JwtKey"]!));
-        
-        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
-
-        var token = new JwtSecurityToken(
-            _configuration["JwtIssuer"],
-            _configuration["JwtIssuer"],
-            claims,
-            expires: DateTime.Now.AddDays(7),
-            signingCredentials: creds);
-
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        var token = tokenHandler.CreateToken(tokenDescriptor);
+        return tokenHandler.WriteToken(token);
     }
 }

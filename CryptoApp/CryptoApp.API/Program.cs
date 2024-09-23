@@ -1,12 +1,15 @@
 using System.Runtime.InteropServices;
+using System.Text;
 using CryptoApp.API.Common;
 using CryptoApp.Data;
 using CryptoApp.Data.Models;
 using CryptoApp.Data.Repository;
 using CryptoApp.Services.Implementations;
 using CryptoApp.Services.Interfaces;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
 public class Program
@@ -22,30 +25,53 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "CryptoApp.API", Version = "v1" });
-            c.OperationFilter<FileUploadOperation>();
+            c.SwaggerDoc("v1", new() { Title = "Pappa´s API", Version = "v1" });
 
-            // Add JWT Authentication
+            // Define the OAuth2.0 scheme that's in use (i.e., Implicit Flow)
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
             {
-                In = ParameterLocation.Header,
-                Description = "Please enter JWT with Bearer into field. Example: \"Bearer {token}\"",
+                Description =
+                    "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
                 Name = "Authorization",
+                In = ParameterLocation.Header,
                 Type = SecuritySchemeType.ApiKey,
                 Scheme = "Bearer"
             });
 
-            c.AddSecurityRequirement(new OpenApiSecurityRequirement
+            c.AddSecurityRequirement(new OpenApiSecurityRequirement()
             {
                 {
                     new OpenApiSecurityScheme
                     {
-                        Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
+                        Reference = new OpenApiReference
+                        {
+                            Type = ReferenceType.SecurityScheme,
+                            Id = "Bearer"
+                        },
+                        Scheme = "oauth2",
+                        Name = "Bearer",
+                        In = ParameterLocation.Header,
                     },
-                    Array.Empty<string>()
+                    new List<string>()
                 }
             });
         });
+        
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+                    ClockSkew = TimeSpan.Zero
+                };
+            });
         
         string GetOsDbPath()
         {

@@ -7,14 +7,15 @@ namespace CryptoApp.Services.Implementations;
 
 public class CoinloreService : ICoinloreService
 {
-    private readonly string _coinloreBaseUrl;
-    private static readonly HttpClient _httpClient = new HttpClient();
-    public static Dictionary<string, int> CoinInfoCache { get; } = new Dictionary<string, int>();
     private readonly IConfiguration _configuration;
+    private readonly HttpClient _httpClient;
 
-    public CoinloreService(IConfiguration configuration)
+    public static Dictionary<string, int> CoinInfoCache { get; } = new();
+
+    public CoinloreService(IConfiguration configuration, HttpClient httpClient)
     {
         _configuration = configuration;
+        _httpClient = httpClient;
     }
 
     public async Task<List<CoinloreItemDto>> FetchCoinsInBatchAsync(int start, int limit)
@@ -25,7 +26,7 @@ public class CoinloreService : ICoinloreService
             var response = await _httpClient.GetStringAsync(url);
 
             var dataToken = JObject.Parse(response)["data"];
-            var coinInfoData = dataToken?.ToObject<List<CoinloreItemDto>>() ?? [];
+            var coinInfoData = dataToken?.ToObject<List<CoinloreItemDto>>() ?? new List<CoinloreItemDto>();
 
             foreach (var coin in coinInfoData)
             {
@@ -37,39 +38,9 @@ public class CoinloreService : ICoinloreService
 
             return coinInfoData;
         }
-        catch (HttpRequestException httpEx)
+        catch (HttpRequestException)
         {
-            // _loggingService.LogError("Error occurred while fetching coins from Coinlore API", httpEx);
             throw new Exception("An error occurred while fetching coins from Coinlore API. Please try again later.");
         }
     }
-    
-    public int? GetCoinIdBySymbolAsync(string symbol)
-    {
-        if (CoinInfoCache.TryGetValue(symbol, out var id))
-        {
-            return id;
-        }
-
-        return null;
-    }
-    
-    public async Task<CoinloreItemDto[]?> GetCoinsDetailsByIdsAsync(string coinIds)
-    {
-        try
-        {
-            var response = await _httpClient.GetStringAsync($"{_coinloreBaseUrl}/ticker/?id={coinIds}");
-
-            var coinArray = JArray.Parse(response);
-
-            var coinData = coinArray.ToObject<CoinloreItemDto[]>();
-
-            return coinData;
-        }
-        catch (HttpRequestException httpEx)
-        {
-            throw new Exception("An error occurred while fetching coin details from the Coinlore API. Please try again later.");
-        }
-    }
-    
 }

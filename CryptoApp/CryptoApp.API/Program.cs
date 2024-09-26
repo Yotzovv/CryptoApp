@@ -25,7 +25,7 @@ public class Program
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new() { Title = "Pappa´s API", Version = "v1" });
+            c.SwaggerDoc("v1", new() { Title = "CryptoApp API", Version = "v1" });
 
             // Define the OAuth2.0 scheme that's in use (i.e., Implicit Flow)
             c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme

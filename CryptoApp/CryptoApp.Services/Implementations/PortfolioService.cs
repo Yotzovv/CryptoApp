@@ -39,13 +39,18 @@ public class PortfolioService : IPortfolioService
     {
         using var reader = new StreamReader(file!.OpenReadStream());
 
-        var portfolio = _context.Portfolios.FirstOrDefault(x => x.UserId == user.Id);
+        var portfolio = await _portfolioRepository.FindAsync(x => x.UserId == user.Id, 
+            include: q => q
+                .Include(c => c.Currencies)
+                .Include(u => u.User));
 
         while (await reader.ReadLineAsync() is { } line)
         {
             var currency = PortfolioHelpers.ProcessLine(line, user, portfolio);
+            
+            var currencyExists = portfolio.Currencies.Any(x => x.Coin == currency.Coin);
 
-            if (!_context.Currencies.Where(x => x.PortfolioId == user.PortfolioId).Any(x => x.Coin == currency.Coin))
+            if (!currencyExists)
             {
                 portfolio.Currencies.Add(currency);
             }
@@ -66,8 +71,12 @@ public class PortfolioService : IPortfolioService
     
     public async Task CalculateCurrentPortfolioValue(AspNetUser user, List<CoinloreItemDto> coinsInfoCache)
     {
-        //TODO: use Repository pattern
-       user.Portfolio = _context.Portfolios.Include(c => c.Currencies).FirstOrDefault(x => x.UserId == user.Id);
+       user.Portfolio = await _portfolioRepository.FindAsync(x => x.UserId == user.Id, 
+            include: q => q
+                .Include(c => c.Currencies)
+                .Include(u => u.User));
+       
+       
        var userCoins = user.Portfolio.Currencies;
         
         // Fetch current prices of all coins
@@ -82,9 +91,9 @@ public class PortfolioService : IPortfolioService
         userCoins.ForEach(x => portfolioValue += (decimal.Parse(x.Amount.ToString()) * x.CurrentPrice));
         
         user.Portfolio.CurrentPortfolioValue = (double)portfolioValue;
+        user.Portfolio.Currencies = userCoins;
         
-        _context.Portfolios.Update(user.Portfolio);
-        _context.Currencies.UpdateRange(userCoins);
+        _portfolioRepository.UpdateAsync(user.Portfolio);
         
         await _context.SaveChangesAsync();
     }
@@ -114,7 +123,7 @@ public class PortfolioService : IPortfolioService
         
         portfolio.OverallChangePercentage = changePercentage;
         
-        _context.Portfolios.Update(portfolio);
+        _portfolioRepository.UpdateAsync(portfolio);
 
         await _context.SaveChangesAsync();
     }
@@ -122,16 +131,15 @@ public class PortfolioService : IPortfolioService
     public async Task UpdateCoinsChangePercentages(AspNetUser user)
     {
         var portfolio = user.Portfolio;
-        var coins = portfolio.Currencies;
         
-        foreach (var coin in coins)
+        foreach (var coin in portfolio.Currencies)
         {
             var changePercentage = ((coin.CurrentPrice - coin.InitialBuyPrice) / coin.InitialBuyPrice) * 100;
             
             coin.ChangePercentage = (double)changePercentage;
         }
 
-        _context.Currencies.UpdateRange(coins);
+        _portfolioRepository.UpdateAsync(portfolio);
 
         await _context.SaveChangesAsync();
     }

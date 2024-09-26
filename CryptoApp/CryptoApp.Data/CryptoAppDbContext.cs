@@ -67,10 +67,9 @@ public class CryptoAppDbContext : IdentityDbContext<AspNetUser, IdentityRole<Gui
                 currency.Property(x => x.InitialBuyPrice).HasPrecision(18, 6);
                 currency.Property(x => x.InitialValue).HasPrecision(18, 6);
 
-               // currency.HasOne(x => x.Portfolio)
-               //     .WithMany(c => c.Currencies)
-               //     .HasForeignKey(x => x.PortfolioId)
-               //     .OnDelete(DeleteBehavior.Cascade);
+                currency.HasIndex(c => 
+                        new { c.Coin, c.PortfolioId })
+                    .IsUnique();
             });
         }
 

@@ -127,6 +127,7 @@ public class Program
         
         builder.Services.AddScoped<IPortfolioService, PortfolioService>();
         builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
+        builder.Services.AddScoped<ICoinloreService, CoinloreService>();
 
         var app = builder.Build();
         

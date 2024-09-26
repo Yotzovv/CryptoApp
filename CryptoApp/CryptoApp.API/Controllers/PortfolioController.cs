@@ -15,11 +15,13 @@ public class PortfolioController : ControllerBase
 {
     private readonly IPortfolioService _portfolioService;
     private readonly UserManager<AspNetUser> _userManager;
+    private readonly ICoinloreService _coinloreService;
 
-    public PortfolioController(IPortfolioService portfolioService, UserManager<AspNetUser> userManager)
+    public PortfolioController(IPortfolioService portfolioService, UserManager<AspNetUser> userManager, ICoinloreService coinloreService)
     {
         _portfolioService = portfolioService;
         _userManager = userManager;
+        _coinloreService = coinloreService;
     }
     
     
@@ -33,9 +35,41 @@ public class PortfolioController : ControllerBase
             return Unauthorized("No user ID claim present in token.");
         }
       
+        var coinsInfoCache = await _coinloreService.FetchCoinsInBatchAsync(1, 100);
+        
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+
+        // await _portfolioService.CalculateCurrentPortfolioValue(user!, coinsInfoCache);
+        
         var portfolio = await _portfolioService.Get(userId);
         
         return Ok(portfolio);
+    }
+
+    [HttpPatch]
+    public async Task<IActionResult> UpdateCurrentValue()
+    {
+        var userId = new Guid(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
+
+        if(userId == null || userId == Guid.Empty)
+        {
+            return Unauthorized("No user ID claim present in token.");
+        }
+        
+        var user = await _userManager.FindByIdAsync(userId.ToString());
+        
+        var coinsInfoCache = await _coinloreService.FetchCoinsInBatchAsync(0, 100);
+
+        try
+        {
+            await _portfolioService.CalculateCurrentPortfolioValue(user!, coinsInfoCache);
+        }
+        catch (Exception e)
+        {
+            return BadRequest();
+        }
+
+        return Ok();
     }
     
     [HttpPost("upload")]
@@ -60,6 +94,11 @@ public class PortfolioController : ControllerBase
             var user = await _userManager.FindByIdAsync(userId);
             
             await _portfolioService.Upload(dto.File, user!);
+            
+            var coinsInfoCache = await _coinloreService.FetchCoinsInBatchAsync(1, 100);
+            
+            await _portfolioService.CalculateInitialPortfolioValue(user!);
+            // await _portfolioService.CalculateCurrentPortfolioValue(user!, coinsInfoCache); // current
             
             return Ok();
         }

@@ -44,7 +44,8 @@ public static class PortfolioHelpers
                 Id = x.Id,
                 Amount = x.Amount,
                 Coin = x.Coin,
-                InitialBuyPrice = x.InitialBuyPrice
+                InitialBuyPrice = x.InitialBuyPrice,
+                CurrentPrice = x.CurrentPrice,
             }).ToList()
         };
         return portfolioDto;

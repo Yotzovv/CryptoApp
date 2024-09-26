@@ -7,8 +7,6 @@ public class Currency
     public double Amount { get; set; }
     public decimal InitialBuyPrice { get; set; }
     public decimal CurrentPrice { get; set; }
-    public decimal InitialValue { get; set; }
-    public decimal CurrentValue { get; set; }
     
     public double ChangePercentage { get; set; }
     

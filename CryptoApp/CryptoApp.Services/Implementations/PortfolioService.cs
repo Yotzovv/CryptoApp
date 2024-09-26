@@ -29,23 +29,67 @@ public class PortfolioService : IPortfolioService
                 .Include(u => u.User));
 
         var portfolioDto = PortfolioHelpers.MapToPortfolioDto(portfolio);
+        portfolioDto.CurrentPortfolioValue = portfolio.CurrentPortfolioValue;
+        portfolioDto.InitialPortfolioValue = portfolio.InitialPortfolioValue;
 
         return portfolioDto;
     }
-
+    
     public async Task Upload(IFormFile? file, AspNetUser user)
     {
         using var reader = new StreamReader(file!.OpenReadStream());
 
-        var portfolio = await _portfolioRepository.FindAsync(x => x.Id == user.Id);
+        var portfolio = _context.Portfolios.FirstOrDefault(x => x.UserId == user.Id);
 
         while (await reader.ReadLineAsync() is { } line)
         {
             var currency = PortfolioHelpers.ProcessLine(line, user, portfolio);
-            
-            portfolio.Currencies.Add(currency);
+
+            if (!_context.Currencies.Where(x => x.PortfolioId == user.PortfolioId).Any(x => x.Coin == currency.Coin))
+            {
+                portfolio.Currencies.Add(currency);
+            }
         }
 
+        await _context.SaveChangesAsync();
+    }
+    
+    public async Task CalculateCurrentPortfolioValue(AspNetUser user, List<CoinloreItemDto> coinsInfoCache)
+    {
+       user.Portfolio = _context.Portfolios.Include(c => c.Currencies).FirstOrDefault(x => x.UserId == user.Id);
+       var userCoins = user.Portfolio.Currencies;
+        
+        // Fetch current prices of all coins
+        foreach (var coin in userCoins)
+        {
+            var coinInfo = coinsInfoCache.FirstOrDefault(x => x.Symbol == coin.Coin);
+            coin.CurrentPrice = coinInfo?.Price_Usd ?? 0;
+        }
+        
+        decimal portfolioValue = 0;
+        
+        userCoins.ForEach(x => portfolioValue += (decimal.Parse(x.Amount.ToString()) * x.CurrentPrice));
+        
+        user.Portfolio.CurrentPortfolioValue = (double)portfolioValue;
+        
+        _context.Portfolios.Update(user.Portfolio);
+        _context.Currencies.UpdateRange(userCoins);
+        
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task CalculateInitialPortfolioValue(AspNetUser user)
+    {
+        double initialPortfolioValue = 0;
+
+        foreach (var coin in user.Portfolio.Currencies)
+        {
+            var sum = (double)coin.InitialBuyPrice * coin.Amount;
+            initialPortfolioValue += sum;
+        }
+
+        user.Portfolio.InitialPortfolioValue = initialPortfolioValue;
+        
         await _context.SaveChangesAsync();
     }
 }

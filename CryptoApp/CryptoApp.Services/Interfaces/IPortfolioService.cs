@@ -9,4 +9,8 @@ public interface IPortfolioService
     Task Upload(IFormFile? file, AspNetUser user);
     
     Task<PortfolioDto> Get(Guid id);
+    
+    Task CalculateCurrentPortfolioValue(AspNetUser user, List<CoinloreItemDto> coinsInfoCache);
+
+    Task CalculateInitialPortfolioValue(AspNetUser user);
 }

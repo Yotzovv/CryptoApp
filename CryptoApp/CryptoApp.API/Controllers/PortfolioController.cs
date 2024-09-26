@@ -46,8 +46,8 @@ public class PortfolioController : ControllerBase
         return Ok(portfolio);
     }
 
-    [HttpPatch]
-    public async Task<IActionResult> UpdateCurrentValue()
+    [HttpPatch("update-portfolio")]
+    public async Task<IActionResult> UpdatePortfolio()
     {
         var userId = new Guid(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
@@ -62,7 +62,7 @@ public class PortfolioController : ControllerBase
 
         try
         {
-            await _portfolioService.CalculateCurrentPortfolioValue(user!, coinsInfoCache);
+            await _portfolioService.UpdatePortfolio(user!, coinsInfoCache);
         }
         catch (Exception e)
         {

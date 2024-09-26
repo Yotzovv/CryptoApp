@@ -54,8 +54,19 @@ public class PortfolioService : IPortfolioService
         await _context.SaveChangesAsync();
     }
     
+    public async Task UpdatePortfolio(AspNetUser user,  List<CoinloreItemDto> coinsInfoCache)
+    {
+        await CalculateCurrentPortfolioValue(user, coinsInfoCache);
+        await CalculateInitialPortfolioValue(user);
+        await UpdateOverallChangePercentage(user);
+        await UpdateCoinsChangePercentages(user);
+        
+        await _context.SaveChangesAsync();
+    }
+    
     public async Task CalculateCurrentPortfolioValue(AspNetUser user, List<CoinloreItemDto> coinsInfoCache)
     {
+        //TODO: use Repository pattern
        user.Portfolio = _context.Portfolios.Include(c => c.Currencies).FirstOrDefault(x => x.UserId == user.Id);
        var userCoins = user.Portfolio.Currencies;
         
@@ -90,6 +101,38 @@ public class PortfolioService : IPortfolioService
 
         user.Portfolio.InitialPortfolioValue = initialPortfolioValue;
         
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateOverallChangePercentage(AspNetUser user)
+    {
+        var portfolio = user.Portfolio;
+        var currentPortfolioValue = portfolio.CurrentPortfolioValue;
+        var initialPortfolioValue = portfolio.InitialPortfolioValue;
+        
+        var changePercentage = ((currentPortfolioValue - initialPortfolioValue) / initialPortfolioValue) * 100;
+        
+        portfolio.OverallChangePercentage = changePercentage;
+        
+        _context.Portfolios.Update(portfolio);
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task UpdateCoinsChangePercentages(AspNetUser user)
+    {
+        var portfolio = user.Portfolio;
+        var coins = portfolio.Currencies;
+        
+        foreach (var coin in coins)
+        {
+            var changePercentage = ((coin.CurrentPrice - coin.InitialBuyPrice) / coin.InitialBuyPrice) * 100;
+            
+            coin.ChangePercentage = (double)changePercentage;
+        }
+
+        _context.Currencies.UpdateRange(coins);
+
         await _context.SaveChangesAsync();
     }
 }

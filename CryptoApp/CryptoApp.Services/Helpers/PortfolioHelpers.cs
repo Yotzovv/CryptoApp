@@ -46,7 +46,10 @@ public static class PortfolioHelpers
                 Coin = x.Coin,
                 InitialBuyPrice = x.InitialBuyPrice,
                 CurrentPrice = x.CurrentPrice,
-            }).ToList()
+                ChangePercentage = x.ChangePercentage,
+                
+            }).ToList(),
+            OverallChangePercentage = portfolio.OverallChangePercentage,
         };
         return portfolioDto;
     }

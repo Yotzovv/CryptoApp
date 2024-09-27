@@ -2,6 +2,7 @@ using CryptoApp.Data.dtos;
 using CryptoApp.Services.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json.Linq;
+using System.Net.Http;
 
 namespace CryptoApp.Services.Implementations;
 
@@ -12,10 +13,10 @@ public class CoinloreService : ICoinloreService
 
     public static Dictionary<string, int> CoinInfoCache { get; } = new();
 
-    public CoinloreService(IConfiguration configuration, HttpClient httpClient)
+    public CoinloreService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
     {
         _configuration = configuration;
-        _httpClient = httpClient;
+        _httpClient = httpClientFactory.CreateClient();
     }
 
     public async Task<List<CoinloreItemDto>> FetchCoinsInBatchAsync(int start, int limit)

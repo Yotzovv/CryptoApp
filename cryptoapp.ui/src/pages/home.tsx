@@ -1,5 +1,3 @@
-// src/components/Home.tsx
-
 import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
@@ -17,8 +15,7 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import { UploadFile } from "@mui/icons-material";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList } from "recharts";
-import requests, { CurrencyDto, PortfolioDto } from "../common/requests";
+import requests, { PortfolioDto } from "../common/requests";
 
 const Home: React.FC = () => {
   const theme = useTheme();
@@ -33,16 +30,13 @@ const Home: React.FC = () => {
     setError(null);
     if (e.target.files && e.target.files.length > 0) {
       const file = e.target.files[0];
-      // Optional: Validate file type and size here
       setSelectedFile(file);
     }
   };
 
   const fetchPortfolio = async () => {
     try {
-      // First, call UpdatePortfolio to fetch the latest coin values
       await requests.updatePortfolio();
-      // Then, get the updated portfolio
       const currentPortfolio = await requests.getCurrentPortfolio();
       setPortfolio(currentPortfolio);
     } catch (err: any) {
@@ -51,19 +45,15 @@ const Home: React.FC = () => {
   };
 
   useEffect(() => {
-    // If portfolio exists, set up polling
     if (portfolio) {
-      // Clear any existing interval
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
       }
 
-      // Set up new interval
-      const intervalInMs = refreshInterval * 60 * 1000; // Convert minutes to milliseconds
+      const intervalInMs = refreshInterval * 60 * 1000;
       intervalRef.current = setInterval(fetchPortfolio, intervalInMs);
     }
 
-    // Cleanup on unmount
     return () => {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -82,11 +72,11 @@ const Home: React.FC = () => {
   
     try {
       await requests.uploadPortfolio(selectedFile);
-      // After successful upload, fetch the current portfolio
+
       const currentPortfolio = await requests.getCurrentPortfolio();
       setPortfolio(currentPortfolio);
     } catch (err: any) {
-      // Handle errors
+
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);
       } else {
@@ -95,15 +85,7 @@ const Home: React.FC = () => {
     } finally {
       setUploading(false);
     }
-  };  
-
-  // Prepare data for the chart
-  const chartData = portfolio?.currencies.map((currency: CurrencyDto) => ({
-    coin: currency.coin,
-    Initial: currency.initialBuyPrice,
-    Current: currency.currentPrice,
-    Change: currency.changePercentage,
-  }));
+  };
 
   return (
     <Box
@@ -172,8 +154,7 @@ const Home: React.FC = () => {
       </Box>
     )}
 
-      {/* Portfolio Display Section */}
-      {portfolio && (
+    {portfolio && (
         <Box>
           <Typography variant="h5" gutterBottom>
             Your Portfolio
@@ -222,7 +203,7 @@ const Home: React.FC = () => {
                     <TableCell>{currency.coin}</TableCell>
                     <TableCell>{currency.amount}</TableCell>
                     <TableCell>{currency.initialBuyPrice.toFixed(2)}</TableCell>
-                    <TableCell>{currency.currentPrice.toFixed(2)}</TableCell>
+                    <TableCell>{currency.currentPrice.toFixed(5)}</TableCell>
                     <TableCell
                       sx={{
                         color: currency.changePercentage >= 0 ? "green" : "red",
@@ -235,27 +216,8 @@ const Home: React.FC = () => {
               </TableBody>
             </Table>
           </TableContainer>
-
-          {/* Chart of Price Changes */}
-          {chartData && chartData.length > 0 && (
-            <Box sx={{ width: "100%", height: 400 }}>
-              <ResponsiveContainer>
-                <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <XAxis dataKey="coin" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="Initial" fill="#8884d8">
-                    <LabelList dataKey="Initial" position="top" />
-                  </Bar>
-                  <Bar dataKey="Current" fill="#82ca9d">
-                    <LabelList dataKey="Current" position="top" />
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </Box>
-          )}
         </Box>
-      )}
+    )}
     </Box>
   );
 };

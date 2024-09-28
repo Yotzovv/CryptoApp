@@ -36,11 +36,16 @@ const Home: React.FC = () => {
 
   const fetchPortfolio = async () => {
     try {
+      setError(null);
       await requests.updatePortfolio();
       const currentPortfolio = await requests.getCurrentPortfolio();
       setPortfolio(currentPortfolio);
     } catch (err: any) {
-      setError("An error occurred while fetching the portfolio.");
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("An error occurred while updating the portfolio.");
+      }
     }
   };
 

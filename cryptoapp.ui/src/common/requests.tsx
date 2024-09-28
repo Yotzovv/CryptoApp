@@ -1,8 +1,5 @@
-// src/api.ts or src/requests.ts
-
 import axios from "axios";
 
-// Define the structure of the login response
 interface AuthResponse {
   token: string;
 }
@@ -38,12 +35,8 @@ export interface PortfolioDto {
 const api = axios.create({
   baseURL: "http://localhost:5088/api/",
   withCredentials: true,
-  // headers: {
-  //   "Content-Type": "application/json",
-  // },
 });
 
-// Request interceptor to add the JWT token to headers
 api.interceptors.request.use(
   (config) => {
     const token = sessionStorage.getItem("jwt");
@@ -59,7 +52,6 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle 401 Unauthorized errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -96,8 +88,8 @@ const register = (email: string, password: string) =>
     .then((res) => {
       const message = res.data.message;
       if (message) {
-        alert(message); // Notify the user of successful registration
-        window.location.href = "/login"; // Redirect to login page
+        alert(message);
+        window.location.href = "/login";
       } else {
         throw new Error("Unexpected response from server");
       }
@@ -109,7 +101,7 @@ const register = (email: string, password: string) =>
 
 const uploadPortfolio = (file: File) => {
   const formData = new FormData();
-  formData.append('File', file); // Ensure 'File' matches the DTO property name
+  formData.append('File', file);
 
   return api
     .post("Portfolio/upload", formData)

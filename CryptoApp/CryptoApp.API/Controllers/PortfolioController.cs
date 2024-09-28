@@ -104,7 +104,7 @@ public class PortfolioController : ControllerBase
         }
         catch (Exception e)
         {
-            return StatusCode(500, new { message = "An error occurred while processing the file." });
+            return StatusCode(500, new { message = e.Message });
         }
     }
 }

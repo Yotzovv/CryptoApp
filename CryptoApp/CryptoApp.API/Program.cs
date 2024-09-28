@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
 
 public class Program
 {
@@ -18,9 +19,9 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         var configuration = builder.Configuration;
-        
+
         const string CorsPolicyName = "CorsPolicy";
-        
+
         builder.Services.AddControllers();
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen(c =>
@@ -56,24 +57,41 @@ public class Program
                 }
             });
         });
-        
-        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+
+        builder.Services.AddAuthentication(options =>
             {
-                options.TokenValidationParameters = new TokenValidationParameters
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
                 {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                    ValidAudience = builder.Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
-                    ClockSkew = TimeSpan.Zero
-                };
-            });
-        
-        string GetOsDbPath()
+                    options.Events = new JwtBearerEvents
+                    {
+                        OnChallenge = context =>
+                        {
+                            context.HandleResponse();
+                            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                            context.Response.ContentType = "application/json";
+                            var result = JsonConvert.SerializeObject(new { message = "Unauthorized" });
+                            return context.Response.WriteAsync(result);
+                        }
+                    };
+                    
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                        ValidAudience = builder.Configuration["Jwt:Audience"],
+                        IssuerSigningKey =
+                            new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+                    };
+                }
+            );
+
+    string GetOsDbPath()
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return "Server=.\\SQLEXPRESS;Database=CryptoAppDB;Trusted_Connection=True;MultipleActiveResultSets=true;";
@@ -118,7 +136,7 @@ public class Program
         {
             options.AddPolicy("CorsPolicy", builder =>
             {
-                builder.WithOrigins("http://localhost:4200")
+                builder.WithOrigins("http://localhost:3000")
                     .AllowAnyMethod()
                     .AllowAnyHeader()
                     .AllowCredentials();

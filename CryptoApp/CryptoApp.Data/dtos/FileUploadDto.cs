@@ -6,6 +6,5 @@ using System.ComponentModel.DataAnnotations;
 public class FileUploadDto
 {
     [Required]
-    [Display(Name = "file")]
     public IFormFile File { get; set; }
 }

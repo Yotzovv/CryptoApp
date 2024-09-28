@@ -148,7 +148,8 @@ public class Program
         builder.Services.AddScoped<IPortfolioService, PortfolioService>();
         builder.Services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
         builder.Services.AddScoped<ICoinloreService, CoinloreService>();
-
+        builder.Services.AddSingleton<ILogService, LogService>();
+        
         var app = builder.Build();
         
         if (app.Environment.IsDevelopment())

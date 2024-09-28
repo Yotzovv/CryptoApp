@@ -16,12 +16,14 @@ public class PortfolioController : ControllerBase
     private readonly IPortfolioService _portfolioService;
     private readonly UserManager<AspNetUser> _userManager;
     private readonly ICoinloreService _coinloreService;
+    private readonly ILogService _logService;
 
-    public PortfolioController(IPortfolioService portfolioService, UserManager<AspNetUser> userManager, ICoinloreService coinloreService)
+    public PortfolioController(IPortfolioService portfolioService, UserManager<AspNetUser> userManager, ICoinloreService coinloreService, ILogService logService)
     {
         _portfolioService = portfolioService;
         _userManager = userManager;
         _coinloreService = coinloreService;
+        _logService = logService;
     }
     
     
@@ -32,16 +34,22 @@ public class PortfolioController : ControllerBase
 
         if(userId == null || userId == Guid.Empty)
         {
+            _logService.LogError("No user ID claim present in token.");
+            
             return Unauthorized("No user ID claim present in token.");
         }
       
         var coinsInfoCache = await _coinloreService.FetchCoinsInBatchAsync(1, 100);
         
         var user = await _userManager.FindByIdAsync(userId.ToString());
+        
+        _logService.LogInfo($"User {user?.UserName} requested current portfolio.");
 
-        // await _portfolioService.CalculateCurrentPortfolioValue(user!, coinsInfoCache);
+        await _portfolioService.CalculateCurrentPortfolioValue(user!, coinsInfoCache);
         
         var portfolio = await _portfolioService.Get(userId);
+        
+        _logService.LogInfo("Current portfolio returned.");
         
         return Ok(portfolio);
     }
@@ -49,10 +57,13 @@ public class PortfolioController : ControllerBase
     [HttpPatch("update-portfolio")]
     public async Task<IActionResult> UpdatePortfolio()
     {
+        _logService.LogInfo("Updating portfolio..");
+        
         var userId = new Guid(User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier)?.Value);
 
         if(userId == null || userId == Guid.Empty)
         {
+            _logService.LogError("No user ID claim present in token.");
             return Unauthorized("No user ID claim present in token.");
         }
         
@@ -63,9 +74,11 @@ public class PortfolioController : ControllerBase
         try
         {
             await _portfolioService.UpdatePortfolio(user!, coinsInfoCache);
+            _logService.LogInfo("Portfolio updated successfully.");
         }
         catch (Exception e)
         {
+            _logService.LogError("Error occurred while updating portfolio.", e);
             return BadRequest();
         }
 
@@ -80,14 +93,22 @@ public class PortfolioController : ControllerBase
 
         if(userId == null)
         {
+            _logService.LogError("No user ID claim present in token.");
+
             return Unauthorized("No user ID claim present in token.");
         }
-        
+
         if (dto.File.Length == 0)
+        {
+            _logService.LogError("Invalid file.");   
             return BadRequest(new { message = "Invalid file." });
-        
+        }
+
         if (!dto.File.ContentType.Equals("text/plain", StringComparison.OrdinalIgnoreCase))
+        {
+            _logService.LogError("Invalid file type. Only text files are allowed.");
             return BadRequest(new { message = "Invalid file type. Only text files are allowed." });
+        }
         
         try
         {
@@ -95,15 +116,23 @@ public class PortfolioController : ControllerBase
             
             await _portfolioService.Upload(dto.File, user!);
             
+            _logService.LogInfo($"User {user?.UserName} uploaded a file.");
+            
             var coinsInfoCache = await _coinloreService.FetchCoinsInBatchAsync(1, 100);
             
+            _logService.LogInfo("Calculating initial portfolio value..");
             await _portfolioService.CalculateInitialPortfolioValue(user!);
-            // await _portfolioService.CalculateCurrentPortfolioValue(user!, coinsInfoCache); // current
+            
+            _logService.LogInfo("Calculating current portfolio value..");
+            await _portfolioService.CalculateCurrentPortfolioValue(user!, coinsInfoCache); // current
+            
+            _logService.LogInfo("File uploaded successfully.");
             
             return Ok();
         }
         catch (Exception e)
         {
+            _logService.LogError("Error occurred while uploading file.", e);
             return StatusCode(500, new { message = e.Message });
         }
     }

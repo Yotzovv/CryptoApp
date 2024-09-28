@@ -1,0 +1,15 @@
+Log File Initialized at 28.09.2024 16:18:31
+28.09.2024 16:18:36: Updating portfolio..
+28.09.2024 16:19:04: User test3@test.com requested current portfolio.
+28.09.2024 16:19:08: Current portfolio returned.
+28.09.2024 16:19:08: Portfolio updated successfully.
+28.09.2024 16:19:08: User test3@test.com requested current portfolio.
+28.09.2024 16:19:08: Current portfolio returned.
+28.09.2024 16:19:17: Updating portfolio..
+28.09.2024 16:19:17: Portfolio updated successfully.
+28.09.2024 16:19:39: User test3@test.com requested current portfolio.
+28.09.2024 16:19:40: Current portfolio returned.
+28.09.2024 16:19:43: Login attempt for user: test3@test.com
+28.09.2024 16:19:43: Generating JWT token for user: test3@test.com
+28.09.2024 16:19:43: JWT token generated for user: test3@test.com
+28.09.2024 16:19:43: Login successful for user: test3@test.com

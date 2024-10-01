@@ -45,7 +45,6 @@ TestResults/
 PublishProfiles/
 
 # Configuration Files
-appsettings.Development.json
 appsettings.Local.json
 
 # IDE Settings

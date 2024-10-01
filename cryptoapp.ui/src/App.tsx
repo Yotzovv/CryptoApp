@@ -41,7 +41,7 @@ function App() {
       <BrowserRouter>
         <Box sx={{ marginLeft: "0%" }}>
           <Routes>
-            <Route path="/" element={getComponent(<Login />)} />
+            <Route path="/home" element={getComponent(<Home />)} />
             <Route path="/login" element={getComponent(<Login />)} />
             <Route path="/register" element={<Register />} />
           </Routes>

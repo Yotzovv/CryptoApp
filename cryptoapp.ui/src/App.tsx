@@ -41,8 +41,6 @@ function App() {
       <BrowserRouter>
         <Box sx={{ marginLeft: "0%" }}>
           <Routes>
-            {/* <Route path="/" element={getComponent(<ChipProvider><EventProvider><Home /></EventProvider></ChipProvider>)} />
-            <Route path="/home" element={getComponent(<ChipProvider><EventProvider><Home /></EventProvider></ChipProvider>)} /> */}
             <Route path="/" element={getComponent(<Login />)} />
             <Route path="/login" element={getComponent(<Login />)} />
             <Route path="/register" element={<Register />} />
